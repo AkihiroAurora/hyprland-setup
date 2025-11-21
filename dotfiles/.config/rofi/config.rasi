@@ -1,0 +1,95 @@
+configuration {
+    modi: "drun";
+    show-icons: true;
+    display-drun: " ";
+    drun-display-format: "{name}";
+}
+
+@import "config.d/colors.rasi"
+@import "config.d/fonts.rasi"
+
+
+/*****----- Main Window -----*****/
+window {
+    width:                       750px;
+    border-color:                transparent;
+    border-radius:               8px;
+    background-color:            @crust;
+}
+
+/*****----- Main Box -----*****/
+mainbox {
+    spacing:                     15px;
+    margin:                      5px;
+    padding:                     15px;
+}
+
+/*****----- Inputbar -----*****/
+inputbar {
+    padding:                     10px;
+    border-radius:               6px;
+    background-color:            @base;
+    text-color:                  @text;
+    children:                    [ "textbox-prompt-colon", "entry" ];
+}
+
+textbox-prompt-colon {
+    str:                         " ";
+    text-color:                  @overlay1;
+}
+entry {
+    text-color:                  inherit;
+    placeholder:                 "Search...";
+}
+
+/*****----- Listview -----*****/
+listview {
+    columns:                     4;
+    lines:                       3;
+    scrollbar:                   false;
+    fixed-height:                false;
+    fixed-columns:               false;
+    text-color:                  @text;
+    border:                      0;
+}
+
+/*****----- Elements -----*****/
+element {
+    spacing:                     8px;
+    padding:                     20px 5px;
+    border-radius:               12px;
+    orientation:                 vertical;
+}
+element normal.normal,
+element alternate.normal {
+    background-color:            var(crust);
+    text-color:                  var(text);
+}
+element selected.normal {
+    background-color:            var(mauve);
+    text-color:                  var(crust);
+    border-radius:               6px;
+}
+element-icon {
+    size:                        40px;
+}
+element-text {
+    vertical-align:              0.5;
+    horizontal-align:            0.5;
+}
+
+/*****----- Message -----*****/
+error-message {
+    padding:                     15px;
+    border:                      2px solid;
+    border-radius:               8px;
+    border-color:                @red;
+    background-color:            @base;
+    text-color:                  @text;
+}
+textbox {
+    background-color:            @base;
+    text-color:                  @text;
+    vertical-align:              0.5;
+    horizontal-align:            0.0;
+}
