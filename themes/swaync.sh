@@ -1,11 +1,10 @@
 #!/bin/bash
 
-source "$(dirname "${BASH_SOURCE[0]}")/utils/display.sh"
+source "$SCRIPT_DIR/utils/display.sh"
 
 install_swaync_theme() {
-    local script_dir="$(dirname "${BASH_SOURCE[0]}")"
-    local main_script_dir="$(dirname $script_dir)"
-    local theme_dir="$main_script_dir/dotfiles/.config/swaync"
+    local temp_dir="$SCRIPT_DIR/temp"
+    local theme_dir="$SCRIPT_DIR/dotfiles/.config/swaync"
     local theme_name="catppuccin-mocha"
     local repo="catppuccin/swaync"
 
@@ -14,22 +13,42 @@ install_swaync_theme() {
 
     # Check if theme is already installed
     if [ -f "$theme_dir/style.css" ]; then
-        print_info "Swaync theme is already installed"
+        print_success "Swaync theme is already installed"
         return 0
     fi
 
-    print_info "Downloading latest Swaync theme..."
-    # Download latest release using generic URL pattern
-    wget "https://github.com/$repo/releases/latest/download/$theme_name.css"
+    print_info "Installing Swaync theme..."
+
+    # Create and use temp directory
+    mkdir -p "$temp_dir"
+    cd "$temp_dir"
+
+    print_info "Downloading Swaync theme..."
+    if ! wget "https://github.com/$repo/releases/latest/download/$theme_name.css"; then
+        print_error "Failed to download Swaync theme"
+        cd "$SCRIPT_DIR"
+        return 1
+    fi
 
     if [ ! -f "$theme_name.css" ]; then
-        print_error "Failed to download Swaync theme"
+        print_error "Swaync theme CSS file not found"
+        cd "$SCRIPT_DIR"
         return 1
     fi
 
     print_info "Installing theme..."
-    sed -i "s/font-family:.*Ubuntu Nerd Font.*/font-family: 'JetBrainsMono Nerd Font'/g" "$theme_name.css"
-    mv -v "$theme_name.css" "$theme_dir/style.css"
+    if ! sed -i "s/font-family:.*Ubuntu Nerd Font.*/font-family: 'JetBrainsMono Nerd Font'/g" "$theme_name.css"; then
+        print_error "Failed to modify font in Swaync theme"
+        cd "$SCRIPT_DIR"
+        return 1
+    fi
 
+    if ! mv -v "$theme_name.css" "$theme_dir/style.css"; then
+        print_error "Failed to move Swaync theme to config directory"
+        cd "$SCRIPT_DIR"
+        return 1
+    fi
+
+    cd "$SCRIPT_DIR"
     print_success "Swaync theme installed successfully!"
 }

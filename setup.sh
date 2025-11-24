@@ -1,19 +1,23 @@
 #!/bin/bash
 
-# Source utility functions
-source "$(dirname "${BASH_SOURCE[0]}")/utils/display.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/utils/aur.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/utils/packages.sh"
+# Get absolute path to script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Source theming functions
-source "$(dirname "${BASH_SOURCE[0]}")/themes/grub.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/themes/sddm.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/themes/gtk.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/themes/swaync.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/themes/yazi.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/themes/btop.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/themes/wallpapers.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/themes/dotfiles.sh"
+# Source utility functions
+source "$SCRIPT_DIR/utils/display.sh"
+source "$SCRIPT_DIR/utils/aur.sh"
+source "$SCRIPT_DIR/utils/packages.sh"
+
+# Source
+source "$SCRIPT_DIR/themes/grub.sh"
+source "$SCRIPT_DIR/themes/sddm.sh"
+source "$SCRIPT_DIR/themes/gtk.sh"
+source "$SCRIPT_DIR/themes/swaync.sh"
+source "$SCRIPT_DIR/themes/yazi.sh"
+source "$SCRIPT_DIR/themes/btop.sh"
+source "$SCRIPT_DIR/themes/wallpapers.sh"
+source "$SCRIPT_DIR/themes/dotfiles.sh"
+source "$SCRIPT_DIR/themes/zsh.sh"
 
 # Exit on any error
 set -e
@@ -24,12 +28,12 @@ main() {
     print_logo
 
     # Check if packages.conf exists
-    if [ ! -f "packages.conf" ]; then
-        echo "Error: packages.conf not found!"
+    if [ ! -f "$SCRIPT_DIR/packages.conf" ]; then
+        print_error "Error: packages.conf not found!"
         exit 1
     fi
 
-    source packages.conf
+    source "$SCRIPT_DIR/packages.conf"
 
     # Update system first
     print_info "Updating system..."
@@ -38,6 +42,9 @@ main() {
     # Install AUR helper if not present
     setup_aur_helper
 
+    # Install Chaotic AUR if not present
+    setup_chaotic_aur
+
     # Install packages by category
     install_all_packages
 
@@ -45,11 +52,15 @@ main() {
     install_grub_theme
     install_sddm_theme
     setup_gtk_theme
-    isntall_swaync_theme
+    install_swaync_theme
     install_yazi_theme
     install_btop_theme
-    install_wallpapers
     install_dotfiles
+    setup_zsh_shell
+
+    # Cleanup temp directory
+    print_info "Cleaning up temporary files..."
+    rm -rf "$SCRIPT_DIR/temp"
 
     print_success "Setup complete! You may want to reboot your system."
 }

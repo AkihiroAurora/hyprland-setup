@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source "$(dirname "${BASH_SOURCE[0]}")/display.sh"
+source "$SCRIPT_DIR/utils/display.sh"
 
 # Function to check if a package is installed
 is_installed() {
@@ -12,11 +12,19 @@ install_packages() {
     local packages=("$@")
     local to_install=()
 
+    # Install oh-my-posh dependencies
+    print_info "Installing oh-my-posh dependencies..."
+    sudo pacman -S --noconfirm unzip
+
     # Install oh-my-posh
     if ! command -v oh-my-posh &>/dev/null; then
         print_info "Installing oh-my-posh via install script..."
-        curl -s https://ohmyposh.dev/install.sh | sudo bash -s -- -d /usr/bin/
-        print_success "oh-my-posh installed successfully"
+        if curl -s https://ohmyposh.dev/install.sh | sudo bash -s -- -d /usr/bin/; then
+            print_success "oh-my-posh installed successfully"
+        else
+            print_error "Failed to install oh-my-posh"
+            return 1
+        fi
     else
         print_info "Package 'oh-my-posh' is already installed"
     fi
