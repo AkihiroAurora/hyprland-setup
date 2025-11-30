@@ -20,7 +20,11 @@ setup_gtk_theme() {
 
     print_info "Setting up GTK theme..."
 
+    # Configure Icons
+    gsettings set org.gnome.desktop.interface icon-theme 'Dracula'
+
     # Configure GTK 3.0
+    mkdir -p ~/.config/gtk-3.0
     cat >~/.config/gtk-3.0/settings.ini <<EOF
 [Settings]
 gtk-theme-name=$theme_name
@@ -33,6 +37,7 @@ gtk-application-prefer-dark-theme=1
 EOF
 
     # Configure GTK 4.0
+    mkdir -p ~/.config/gtk-4.0
     cat >~/.config/gtk-4.0/settings.ini <<EOF
 [Settings]
 gtk-theme-name=$theme_name

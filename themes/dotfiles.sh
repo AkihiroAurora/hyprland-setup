@@ -4,7 +4,6 @@ source "$SCRIPT_DIR/utils/display.sh"
 
 install_dotfiles() {
     local dotfiles_dir="$SCRIPT_DIR/dotfiles"
-    local user_config_dir="$HOME/.config"
 
     # Check if already installed
     if [ -d "$HOME/dotfiles" ]; then
@@ -18,15 +17,6 @@ install_dotfiles() {
     if [ ! -d "$dotfiles_dir" ]; then
         print_error "Dotfiles directory not found: $dotfiles_dir"
         return 1
-    fi
-
-    # Remove existing .config directory if it exists
-    if [ -d "$user_config_dir" ]; then
-        print_warning "Removing existing .config directory..."
-        if ! rm -rf "$user_config_dir"; then
-            print_error "Failed to remove existing .config directory"
-            return 1
-        fi
     fi
 
     # Copy dotfiles to home directory

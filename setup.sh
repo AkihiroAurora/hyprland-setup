@@ -45,16 +45,21 @@ main() {
     # Install Chaotic AUR if not present
     setup_chaotic_aur
 
+    # Improve Mirrorlist
+    setup_mirror_list
+
     # Install packages by category
     install_all_packages
 
     # Install themes
+    rm -rf "$HOME/.config"
     install_grub_theme
     install_sddm_theme
     setup_gtk_theme
     install_swaync_theme
     install_yazi_theme
     install_btop_theme
+    install_wallpapers
     install_dotfiles
     setup_zsh_shell
 

@@ -13,7 +13,7 @@ enable_ilovecandy() {
         sudo sed -i 's/^#ILoveCandy/ILoveCandy/' /etc/pacman.conf
     else
         # Add it under the Misc options section if not found
-        sudo sed -i '/^#Misc options$/a ILoveCandy' /etc/pacman.conf
+        sudo sed -i '/^# Misc options$/a ILoveCandy' /etc/pacman.conf
     fi
 }
 
@@ -28,7 +28,7 @@ enable_pacman_colors() {
         sudo sed -i 's/^#Color/Color/' /etc/pacman.conf
     else
         # Add it under the Misc options section if not found
-        sudo sed -i '/^#Misc options$/a Color' /etc/pacman.conf
+        sudo sed -i '/^# Misc options$/a Color' /etc/pacman.conf
     fi
 }
 
@@ -124,4 +124,37 @@ setup_chaotic_aur() {
     sudo pacman -Syu --noconfirm
 
     print_success "Chaotic AUR setup completed successfully"
+}
+
+setup_mirror_list() {
+    print_info "Setting up mirror list..."
+
+    # Install reflector
+    if ! paru -S reflector --noconfirm; then
+        print_error "Failed to install reflector"
+        return 1
+    fi
+
+    # Backup existing mirrorlist
+    if [[ -f /etc/pacman.d/mirrorlist ]]; then
+        if ! sudo mv /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup; then
+            print_error "Failed to backup mirrorlist"
+            return 1
+        fi
+    fi
+
+    # Generate new mirrorlist
+    if ! sudo reflector -l 10 --sort rate --save /etc/pacman.d/mirrorlist; then
+        print_error "Failed to generate new mirrorlist"
+        # Restore backup if generation fails
+        sudo mv /etc/pacman.d/mirrorlist.backup /etc/pacman.d/mirrorlist
+        return 1
+    fi
+
+    # Remove reflector
+    if ! paru -Rs reflector --noconfirm; then
+        print_warning "Failed to remove reflector, but mirrorlist was updated successfully"
+    fi
+
+    print_success "Mirror list updated successfully"
 }

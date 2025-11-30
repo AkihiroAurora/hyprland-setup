@@ -23,6 +23,7 @@
 
     "clock": {
         "format": "{:%H:%M:%S}",
+        "interval": 1,
         "tooltip": false
     },
 
