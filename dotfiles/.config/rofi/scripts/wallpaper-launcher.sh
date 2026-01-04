@@ -2,7 +2,7 @@
 
 # Set some variables
 wall_dir="${HOME}/Pictures/wallpapers/"
-cacheDir="${HOME}/.cache/jp/${theme}"
+cacheDir="${HOME}/.cache/jp/"
 rofi_command="rofi -x11 -dmenu -theme ${HOME}/.config/rofi/wallselect.rasi"
 
 # Create cache dir if not exists
@@ -23,16 +23,10 @@ done
 # Select a picture with rofi
 wall_selection=$(find "${wall_dir}" -maxdepth 1 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) -exec basename {} \; | sort | while read -r A; do echo -en "$A\x00icon\x1f""${cacheDir}"/"$A\n"; done | $rofi_command)
 
-# Set the wallpaper with hyprpaper
+# Set the wallpaper with swww
 [[ -n "$wall_selection" ]] || exit 1
 
-# Set wallpaper with hyprpaper
-hyprctl hyprpaper preload "${wall_dir}/${wall_selection}"
-hyprctl hyprpaper wallpaper "${monitor_name},${wall_dir}/${wall_selection}"
-
-# Optional: Update hyprpaper config file
-hyprpaper_config="${HOME}/.config/hypr/hyprpaper.conf"
-echo "preload = ${wall_dir}/${wall_selection}" >"$hyprpaper_config"
-echo "wallpaper = ${monitor_name},${wall_dir}/${wall_selection}" >>"$hyprpaper_config"
+# Set wallpaper with swww using wipe transition
+swww img "${wall_dir}/${wall_selection}" --transition-fps 60 --transition-type grow
 
 exit 0

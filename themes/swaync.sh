@@ -37,7 +37,7 @@ install_swaync_theme() {
     fi
 
     print_info "Installing theme..."
-    if ! sed -i "s/font-family:.*Ubuntu Nerd Font.*/font-family: 'JetBrainsMono Nerd Font'/g" "$theme_name.css"; then
+    if ! sed -i "s/font-family:.*Ubuntu Nerd Font.*/font-family: 'JetBrainsMono Nerd Font';/g" "$theme_name.css"; then
         print_error "Failed to modify font in Swaync theme"
         cd "$SCRIPT_DIR"
         return 1

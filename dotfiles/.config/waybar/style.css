@@ -48,6 +48,17 @@ window#waybar {
     font-weight: 700;
 }
 
+#tray menu {
+    background: #181825;
+    border-radius: 8px;
+    color: #cdd6f4;
+}
+
+#tray menu menuitem:hover {
+    background-color: #cba6f7;
+}
+
+#tray,
 #pulseaudio,
 #cpu,
 #memory,
