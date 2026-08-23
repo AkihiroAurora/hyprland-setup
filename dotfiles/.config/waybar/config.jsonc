@@ -1,8 +1,5 @@
 {
     "layer": "top",
-    "margin-top": 10, 
-    "margin-left": 10,
-    "margin-right": 10,
     "modules-left": ["hyprland/workspaces", "hyprland/window"],
     "modules-center": ["clock"],
     "modules-right": ["pulseaudio", "cpu", "memory", "network"],
@@ -22,8 +19,9 @@
 
 
     "clock": {
-        "format": "{:%H:%M:%S}",
-        "interval": 1,
+        "format": " {:%I:%M %p}",
+        "format-alt": "󰃰 {:%A, %B %d, %Y (%I:%M %p)}",
+        "interval": 60,
         "tooltip": false
     },
 
@@ -44,14 +42,14 @@
 
     "cpu": {
     "format": " {usage}%",
-    "interval": 2,
+    "interval": 1,
     "tooltip": false
     },
 
 
     "memory": {
-    "format": "󰍛 {percentage}%",
-    "interval": 5,
+    "format": " {percentage}%",
+    "interval": 15,
     "tooltip": false
     },
 
@@ -59,6 +57,7 @@
     "network": {
     "format-ethernet": "󰈀 Ethernet",
     "format-disconnected": "󰖪",
+    "interval": 3,
     "tooltip": false
     }
 }
