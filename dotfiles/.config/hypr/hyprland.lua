@@ -2,19 +2,19 @@
 -- This sources all the split config files
 
 -- Core configuration
-require("configs/00-main")
+require("modules/main")
 
 -- Input devices
-require("configs/10-input")
+require("modules/input")
 
 -- Key bindings
-require("configs/20-binds")
+require("modules/binds")
 
 -- Window rules
-require("configs/30-windowrules")
+require("modules/windowrules")
 
 -- Animations and effects
-require("configs/40-animations")
+require("modules/animations")
 
 -- Startup applications
-require("configs/50-startup")
+require("modules/startup")

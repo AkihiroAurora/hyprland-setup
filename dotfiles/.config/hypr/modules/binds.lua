@@ -59,3 +59,30 @@ hl.bind("CTRL + SHIFT + PRINT", hl.dsp.exec_cmd('grim -g "$(slurp -b 1e1e2e80 -c
 -- Mouse binds
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+
+hl.bind("ALT + F1", function()
+	local gamemode = (hl.get_config("animations.enabled") == false)
+
+	if gamemode then
+		hl.exec_cmd("hyprctl reload")
+		return
+	end
+
+	hl.config({
+		general = {
+			border_size = 0,
+			gaps_in = 0,
+			gaps_out = 0,
+		},
+
+		animations = {
+			enabled = false,
+		},
+
+		decoration = {
+			rounding = 0,
+			blur = { enabled = false },
+			shadow = { enabled = false },
+		},
+	})
+end)
