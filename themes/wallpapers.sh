@@ -3,9 +3,8 @@
 source "$SCRIPT_DIR/utils/display.sh"
 
 install_wallpapers() {
-    local wallpapers="$SCRIPT_DIR/dotfiles/Pictures/"
+    local wallpapers="$SCRIPT_DIR/dotfiles/Pictures/wallpapers"
 
-    # Check if already installed
     if [ -d "$HOME/Pictures/wallpapers" ]; then
         print_info "wallpapers are already installed"
         return 0
@@ -13,8 +12,8 @@ install_wallpapers() {
 
     print_info "Installing Catppuccin wallpapers..."
 
-    # Move wallpapers
-    mv -r $wallpapers $HOME
+    mkdir -p "$HOME/Pictures"
+    mv "$wallpapers" "$HOME/Pictures/"
 
     print_success "Wallpapers installed successfully!"
 }
