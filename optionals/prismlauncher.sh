@@ -8,42 +8,73 @@ install_prismlauncher() {
     local theme_name="Catppuccin-Mocha-theme"
     local repo="prismlauncher/themes"
 
-    # Create theme directory if it doesn't exist
-    mkdir -p "$theme_dir"
-
     # Check if Prism Launcher is already installed
     if command -v prismlauncher &>/dev/null; then
         print_info "Prism Launcher is already installed"
+    else
+        print_info "Installing Prism Launcher..."
+        if ! paru -S --noconfirm prismlauncher; then
+            print_error "Failed to install Prism Launcher"
+            return 1
+        fi
+    fi
+
+    # Check if theme is already installed
+    if [ -d "$theme_dir/Catppuccin-Mocha" ]; then
+        print_success "Prism Launcher theme is already installed"
         return 0
     fi
 
-    print_info "Installing Prism Launcher..."
-    paru -S --noconfirm prismlauncher
-
-    # Create and use temp directory
-    mkdir -p "$temp_dir"
-    cd "$temp_dir"
-
-    if ! wget "https://github.com/$repo/releases/latest/download/$theme_name.zip"; then
-        print_error "Failed to download Swaync theme"
-        cd "$SCRIPT_DIR"
+    # Create theme directory if it doesn't exist
+    if ! mkdir -p "$theme_dir" "$temp_dir"; then
+        print_error "Failed to create theme/temp directories"
         return 1
     fi
 
-    # Copy theme
-    if ! sudo unzip "$theme_name.zip"; then
+    cd "$temp_dir" || {
+        print_error "Failed to cd into $temp_dir"
+        return 1
+    }
+
+    rm -rf themes "$theme_name.zip"
+
+    # Download prismlauncher themes
+    print_info "Downloading Prism Launcher theme..."
+    if ! wget -q "https://github.com/$repo/releases/latest/download/$theme_name.zip"; then
+        print_error "Failed to download Prism Launcher theme"
+        cd "$SCRIPT_DIR" || true
+        return 1
+    fi
+
+    # Check if download failed
+    if [ ! -f "$theme_name.zip" ]; then
+        print_error "Theme zip not found after download"
+        cd "$SCRIPT_DIR" || true
+        return 1
+    fi
+
+    # Unzip prismlauncher theme
+    print_info "Unzipping theme..."
+    if ! unzip -q "$theme_name.zip"; then
         print_error "Failed to unzip Prism Launcher theme"
-        cd "$SCRIPT_DIR"
+        cd "$SCRIPT_DIR" || true
         return 1
     fi
 
-    # Copy theme
-    if ! sudo cp -r "themes/Catppuccin-Mocha" "$theme_dir"; then
-        print_error "Failed to copy Prism Launcher theme"
-        cd "$SCRIPT_DIR"
+    # Checks if the theme exist
+    if [ ! -d "themes/Catppuccin-Mocha" ]; then
+        print_error "Expected themes/Catppuccin-Mocha not found in archive"
+        cd "$SCRIPT_DIR" || true
         return 1
     fi
 
-    cd "$SCRIPT_DIR"
-    print_success "Prism Launcher installed successfully!"
+    # Install prismlauncher theme
+    if ! cp -r "themes/Catppuccin-Mocha" "$theme_dir/"; then
+        print_error "Failed to copy theme into $theme_dir"
+        cd "$SCRIPT_DIR" || true
+        return 1
+    fi
+
+    cd "$SCRIPT_DIR" || true
+    print_success "Prism Launcher theme installed successfully!"
 }

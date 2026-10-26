@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/utils/display.sh"
 source "$SCRIPT_DIR/utils/aur.sh"
 
-# Source
+# Source optional installers
 source "$SCRIPT_DIR/optionals/prismlauncher.sh"
 source "$SCRIPT_DIR/optionals/seanime.sh"
 
@@ -18,7 +18,7 @@ main() {
     # Check if paru is installed
     if ! command -v paru &>/dev/null; then
         print_error "paru is not installed. Run setup.sh first!"
-        exit
+        exit 1
     fi
 
     paru -S --noconfirm gum
@@ -27,6 +27,7 @@ main() {
     clear
 
     # Selection GUI
+    local selections
     selections=$(gum choose \
         --no-limit \
         --cursor="→ " \
@@ -49,21 +50,31 @@ main() {
     fi
 
     # Process each selection
+    local item
     IFS=$'\n'
     for item in $selections; do
         case "$item" in
         "PrismLauncher Setup")
             install_prismlauncher
             ;;
-
         "Seanime Setup")
             install_seanime
             ;;
         esac
         echo "" # Empty line between actions
     done
+    unset IFS
 
-    sudo rm -rf "$SCRIPT_DIR/temp"
+    # ── Safe temp cleanup — only touch our own directory ─────────────
+    if [ -d "$SCRIPT_DIR/temp" ]; then
+        # sudo only if root-owned files exist inside
+        if find "$SCRIPT_DIR/temp" -user root -print -quit 2>/dev/null | grep -q .; then
+            sudo rm -rf "$SCRIPT_DIR/temp"
+        else
+            rm -rf "$SCRIPT_DIR/temp"
+        fi
+    fi
+
     paru -Rs --noconfirm gum
 
     print_success "All selected actions completed!"

@@ -22,6 +22,20 @@ source "$SCRIPT_DIR/themes/zsh.sh"
 # Exit on any error
 set -e
 
+# Back up an existing ~/.config
+backup_config() {
+    if [ -d "$HOME/.config" ] && [ -n "$(ls -A "$HOME/.config" 2>/dev/null)" ]; then
+        local backup="$HOME/.config.bak.$(date +%Y%m%d-%H%M%S)"
+        print_warning "Existing ~/.config will be moved to $backup"
+        if ! mv "$HOME/.config" "$backup"; then
+            print_error "Failed to back up ~/.config — aborting to avoid data loss"
+            return 1
+        fi
+        print_info "Config backed up to $backup"
+    fi
+    return 0
+}
+
 main() {
     # Clear screen and show logo
     clear
@@ -51,16 +65,19 @@ main() {
     # Install packages by category
     install_all_packages
 
+    # Install oh-my-posh
+    setup_oh_my_posh
+
     # Install themes
-    rm -rf "$HOME/.config"
+    backup_config
     install_grub_theme
     install_sddm_theme
     setup_gtk_theme
     install_swaync_theme
     install_yazi_theme
     install_btop_theme
-    install_wallpapers
     install_dotfiles
+    install_wallpapers
     setup_zsh_shell
 
     # Cleanup temp directory
