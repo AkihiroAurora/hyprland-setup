@@ -1,102 +1,91 @@
 #!/bin/bash
 
+# what changed: verify the theme source before touching system paths, create the
+# system theme dir explicitly (it isn't always there), and keep the timed backup
+# so a failed grub-mkconfig can tell the user where their old config went.
+
 source "$SCRIPT_DIR/utils/display.sh"
 
 install_grub_theme() {
     local temp_dir="$SCRIPT_DIR/temp"
+    local theme_src="grub/src/catppuccin-mocha-grub-theme"
     local theme_dest="/usr/share/grub/themes/catppuccin-mocha-grub-theme"
+    local grub_default="/etc/default/grub"
 
     if [ -d "$theme_dest" ]; then
-        print_info "GRUB theme is already installed"
+        print_info "grub theme already installed"
         return 0
     fi
 
     if ! command -v grub-mkconfig &>/dev/null; then
-        print_error "grub-mkconfig not found — is GRUB installed?"
+        print_error "grub-mkconfig not found — is grub actually installed?"
+        return 1
+    fi
+    if [ ! -f "$grub_default" ]; then
+        print_error "no $grub_default — skipping the grub theme"
         return 1
     fi
 
-    print_info "Installing Catppuccin Mocha GRUB theme..."
+    print_info "installing the catppuccin grub theme"
 
-    if ! mkdir -p "$temp_dir" "$(dirname "$theme_dest")"; then
-        print_error "Failed to create theme/temp directories"
+    mkdir -p "$temp_dir" || { print_error "couldn't create $temp_dir"; return 1; }
+    if ! sudo mkdir -p /usr/share/grub/themes; then
+        print_error "couldn't create /usr/share/grub/themes"
         return 1
     fi
 
-    cd "$temp_dir" || {
-        print_error "Failed to cd into $temp_dir"
-        return 1
-    }
+    cd "$temp_dir" || { print_error "couldn't enter $temp_dir"; return 1; }
 
     rm -rf grub
-    print_info "Cloning GRUB themes repository (shallow)..."
     if ! git clone --depth 1 https://github.com/catppuccin/grub.git; then
-        print_error "Failed to clone GRUB themes repository"
+        print_error "couldn't clone the grub themes repo"
         cd "$SCRIPT_DIR" || true
         return 1
     fi
 
-    if [ ! -d "grub/src/catppuccin-mocha-grub-theme" ]; then
-        print_error "Theme source not found: grub/src/catppuccin-mocha-grub-theme"
+    if [ ! -f "$theme_src/theme.txt" ]; then
+        print_error "theme.txt missing from $theme_src — upstream layout moved?"
         cd "$SCRIPT_DIR" || true
         return 1
     fi
 
-    if [ ! -f "grub/src/catppuccin-mocha-grub-theme/theme.txt" ]; then
-        print_error "Theme is incomplete — theme.txt missing from source"
+    if ! sudo cp -r "$theme_src" /usr/share/grub/themes/; then
+        print_error "couldn't copy the theme into /usr/share/grub/themes"
         cd "$SCRIPT_DIR" || true
         return 1
     fi
 
-    if ! sudo cp -r "grub/src/catppuccin-mocha-grub-theme" /usr/share/grub/themes/; then
-        print_error "Failed to copy GRUB theme"
+    local backup="/etc/default/grub.bak.$(date +%Y%m%d-%H%M%S)"
+    if ! sudo cp "$grub_default" "$backup"; then
+        print_error "couldn't back up $grub_default — leaving it untouched"
         cd "$SCRIPT_DIR" || true
         return 1
     fi
-
-    local grub_default="/etc/default/grub"
-    local grub_backup="/etc/default/grub.bak.$(date +%Y%m%d-%H%M%S)"
-
-    if [ ! -f "$grub_default" ]; then
-        print_error "GRUB config not found: $grub_default"
-        cd "$SCRIPT_DIR" || true
-        return 1
-    fi
-
-    if ! sudo cp "$grub_default" "$grub_backup"; then
-        print_error "Failed to back up $grub_default"
-        cd "$SCRIPT_DIR" || true
-        return 1
-    fi
-    print_info "Backed up GRUB config to $grub_backup"
 
     local theme_line="GRUB_THEME=\"$theme_dest/theme.txt\""
-
     if grep -q '^GRUB_THEME=' "$grub_default"; then
         sudo sed -i "s|^GRUB_THEME=.*|$theme_line|" "$grub_default"
     elif grep -q '^#.*GRUB_THEME=' "$grub_default"; then
         sudo sed -i "s|^#.*GRUB_THEME=.*|$theme_line|" "$grub_default"
     else
-        echo "$theme_line" | sudo tee -a "$grub_default" >/dev/null
+        printf '%s\n' "$theme_line" | sudo tee -a "$grub_default" >/dev/null
     fi
 
-    if ! grep -q "^GRUB_THEME=" "$grub_default"; then
-        print_error "Failed to set GRUB_THEME — restoring backup"
-        sudo cp "$grub_backup" "$grub_default"
+    if ! grep -q '^GRUB_THEME=' "$grub_default"; then
+        print_error "GRUB_THEME didn't stick — restoring the backup"
+        sudo cp "$backup" "$grub_default"
         cd "$SCRIPT_DIR" || true
         return 1
     fi
 
-    print_info "Regenerating GRUB configuration..."
+    print_info "regenerating grub.cfg"
     if ! sudo grub-mkconfig -o /boot/grub/grub.cfg; then
-        print_error "Failed to update GRUB configuration"
-        print_info "Your backup at $grub_backup is untouched"
+        print_error "grub-mkconfig failed — your original is at $backup"
         cd "$SCRIPT_DIR" || true
         return 1
     fi
 
     rm -rf grub
-
     cd "$SCRIPT_DIR" || true
-    print_success "GRUB theme installed successfully!"
+    print_success "grub theme installed"
 }

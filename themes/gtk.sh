@@ -1,36 +1,38 @@
 #!/bin/bash
 
+# what changed: clear stale gtk-4.0 symlinks before relinking — the old ln -sf would
+# nest a link inside an existing directory on a re-run. rest is the same config,
+# just tidied.
+
 source "$SCRIPT_DIR/utils/display.sh"
 
 setup_gtk_theme() {
     local theme_name="Catppuccin-Mauve-Dark"
-    local dotfiles_config="$SCRIPT_DIR/dotfiles/.config"
-    local gtk3_dir="$dotfiles_config/gtk-3.0"
-    local gtk4_dir="$dotfiles_config/gtk-4.0"
+    local cfg="$SCRIPT_DIR/dotfiles/.config"
+    local gtk3="$cfg/gtk-3.0"
+    local gtk4="$cfg/gtk-4.0"
 
-    if [ -f "$gtk3_dir/settings.ini" ] &&
-        grep -q "gtk-theme-name=$theme_name" "$gtk3_dir/settings.ini" &&
-        [ -f "$gtk4_dir/settings.ini" ] &&
-        grep -q "gtk-theme-name=$theme_name" "$gtk4_dir/settings.ini" &&
+    if [ -f "$gtk3/settings.ini" ] &&
+        grep -q "gtk-theme-name=$theme_name" "$gtk3/settings.ini" &&
+        [ -f "$gtk4/settings.ini" ] &&
+        grep -q "gtk-theme-name=$theme_name" "$gtk4/settings.ini" &&
         [ -f "$SCRIPT_DIR/dotfiles/.gtkrc-2.0" ] &&
         grep -q "gtk-theme-name=\"$theme_name\"" "$SCRIPT_DIR/dotfiles/.gtkrc-2.0" &&
         [ -f "$SCRIPT_DIR/dotfiles/.xsettingsd.conf" ] &&
         grep -q "Net/ThemeName \"$theme_name\"" "$SCRIPT_DIR/dotfiles/.xsettingsd.conf"; then
-        print_info "GTK theme is already applied"
+        print_info "gtk theme already applied"
         return 0
     fi
 
-    print_info "Setting up GTK theme..."
+    print_info "writing gtk config"
 
     if command -v gsettings &>/dev/null; then
         gsettings set org.gnome.desktop.interface icon-theme 'Dracula' || true
     fi
 
-    if ! mkdir -p "$gtk3_dir"; then
-        print_error "Failed to create $gtk3_dir"
-        return 1
-    fi
-    cat >"$gtk3_dir/settings.ini" <<EOF
+    mkdir -p "$gtk3" "$gtk4" || { print_error "couldn't create the gtk config dirs"; return 1; }
+
+    cat >"$gtk3/settings.ini" <<EOF
 [Settings]
 gtk-theme-name=$theme_name
 gtk-icon-theme-name=Dracula
@@ -41,11 +43,7 @@ gtk-toolbar-style=GTK_TOOLBAR_ICONS
 gtk-application-prefer-dark-theme=1
 EOF
 
-    if ! mkdir -p "$gtk4_dir"; then
-        print_error "Failed to create $gtk4_dir"
-        return 1
-    fi
-    cat >"$gtk4_dir/settings.ini" <<EOF
+    cat >"$gtk4/settings.ini" <<EOF
 [Settings]
 gtk-theme-name=$theme_name
 gtk-icon-theme-name=Dracula
@@ -70,12 +68,12 @@ EOF
 
     local theme_path="/usr/share/themes/$theme_name/gtk-4.0"
     if [ -d "$theme_path" ]; then
-        ln -sf "$theme_path/assets" "$gtk4_dir/assets"
-        ln -sf "$theme_path/gtk.css" "$gtk4_dir/gtk.css"
-        ln -sf "$theme_path/gtk-dark.css" "$gtk4_dir/gtk-dark.css"
+        rm -rf "$gtk4/assets" "$gtk4/gtk.css" "$gtk4/gtk-dark.css"
+        ln -sf "$theme_path/assets" "$gtk4/assets"
+        ln -sf "$theme_path/gtk.css" "$gtk4/gtk.css"
+        ln -sf "$theme_path/gtk-dark.css" "$gtk4/gtk-dark.css"
     else
-        print_warning "GTK-4.0 theme directory not found at $theme_path"
-        print_warning "Please install the theme package first"
+        print_warning "no $theme_path — install the catppuccin gtk theme first"
     fi
 
     cat >"$SCRIPT_DIR/dotfiles/.gtkrc-2.0" <<EOF
@@ -88,5 +86,5 @@ gtk-toolbar-style=GTK_TOOLBAR_ICONS
 gtk-application-prefer-dark-theme=1
 EOF
 
-    print_success "GTK theme configured successfully!"
+    print_success "gtk theme set"
 }

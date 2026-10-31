@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# what changed: don't create dirs before the already-installed check; otherwise same
+# shallow clone + copy, just with tighter checks.
+
 source "$SCRIPT_DIR/utils/display.sh"
 
 install_yazi_theme() {
@@ -7,54 +10,41 @@ install_yazi_theme() {
     local theme_dir="$SCRIPT_DIR/dotfiles/.config/yazi"
     local theme_name="catppuccin-mocha-mauve"
 
-    if ! mkdir -p "$theme_dir" "$temp_dir"; then
-        print_error "Failed to create yazi theme/temp directories"
-        return 1
-    fi
-
-    # ── Already installed? ────────────────────────────────────────────
     if [ -s "$theme_dir/theme.toml" ]; then
-        print_success "Yazi theme is already installed"
+        print_info "yazi theme already installed"
         return 0
     fi
 
-    print_info "Installing Catppuccin Mocha Yazi theme..."
+    print_info "installing the catppuccin yazi theme"
 
-    cd "$temp_dir" || {
-        print_error "Failed to cd into $temp_dir"
-        return 1
-    }
+    mkdir -p "$theme_dir" "$temp_dir" || { print_error "couldn't create the yazi dirs"; return 1; }
+    cd "$temp_dir" || { print_error "couldn't enter $temp_dir"; return 1; }
 
     rm -rf yazi
-    print_info "Cloning yazi themes repository (shallow)..."
     if ! git clone --depth 1 https://github.com/catppuccin/yazi.git; then
-        print_error "Failed to clone yazi themes repository"
+        print_error "couldn't clone the yazi themes repo"
         cd "$SCRIPT_DIR" || true
         return 1
     fi
 
-    # ── Verify the theme source file exists ───────────────────────────
     if [ ! -f "yazi/themes/mocha/$theme_name.toml" ]; then
-        print_error "Theme file not found: yazi/themes/mocha/$theme_name.toml"
-        print_info "Upstream layout may have changed — check github.com/catppuccin/yazi"
+        print_error "no yazi/themes/mocha/$theme_name.toml — upstream layout moved?"
         cd "$SCRIPT_DIR" || true
         return 1
     fi
 
     if ! cp "yazi/themes/mocha/$theme_name.toml" "$theme_dir/theme.toml"; then
-        print_error "Failed to copy yazi theme"
+        print_error "couldn't copy the yazi theme"
         cd "$SCRIPT_DIR" || true
         return 1
     fi
-
     if [ ! -s "$theme_dir/theme.toml" ]; then
-        print_error "Copied yazi theme is empty or missing"
+        print_error "copied yazi theme is empty"
         cd "$SCRIPT_DIR" || true
         return 1
     fi
 
     rm -rf yazi
-
     cd "$SCRIPT_DIR" || true
-    print_success "Yazi theme installed successfully!"
+    print_success "yazi theme installed"
 }

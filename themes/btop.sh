@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# what changed: move the already-installed check ahead of the dir creation, and
+# verify the copied file has content before declaring success.
+
 source "$SCRIPT_DIR/utils/display.sh"
 
 install_btop_theme() {
@@ -7,52 +10,41 @@ install_btop_theme() {
     local theme_dir="$SCRIPT_DIR/dotfiles/.config/btop/themes"
     local theme_path="$theme_dir/catppuccin_mocha.theme"
 
-    if ! mkdir -p "$theme_dir" "$temp_dir"; then
-        print_error "Failed to create btop theme/temp directories"
-        return 1
-    fi
-
-    # ── Already installed? Verify it's a real file, not empty. ────────
     if [ -s "$theme_path" ]; then
-        print_info "Btop theme is already installed"
+        print_info "btop theme already installed"
         return 0
     fi
 
-    print_info "Installing Catppuccin Mocha Btop theme..."
+    print_info "installing the catppuccin btop theme"
 
-    cd "$temp_dir" || {
-        print_error "Failed to cd into $temp_dir"
-        return 1
-    }
+    mkdir -p "$theme_dir" "$temp_dir" || { print_error "couldn't create the btop dirs"; return 1; }
+    cd "$temp_dir" || { print_error "couldn't enter $temp_dir"; return 1; }
 
     rm -rf btop
-    print_info "Cloning btop themes repository (shallow)..."
     if ! git clone --depth 1 https://github.com/catppuccin/btop.git; then
-        print_error "Failed to clone btop themes repository"
+        print_error "couldn't clone the btop themes repo"
         cd "$SCRIPT_DIR" || true
         return 1
     fi
 
     if [ ! -f "btop/themes/catppuccin_mocha.theme" ]; then
-        print_error "Theme file not found in cloned repo: btop/themes/catppuccin_mocha.theme"
+        print_error "no btop/themes/catppuccin_mocha.theme in the clone"
         cd "$SCRIPT_DIR" || true
         return 1
     fi
 
     if ! cp "btop/themes/catppuccin_mocha.theme" "$theme_path"; then
-        print_error "Failed to copy btop theme"
+        print_error "couldn't copy the btop theme"
         cd "$SCRIPT_DIR" || true
         return 1
     fi
-
     if [ ! -s "$theme_path" ]; then
-        print_error "Copied theme file is empty or missing"
+        print_error "copied btop theme is empty"
         cd "$SCRIPT_DIR" || true
         return 1
     fi
 
     rm -rf btop
-
     cd "$SCRIPT_DIR" || true
-    print_success "Btop theme installed successfully!"
+    print_success "btop theme installed"
 }

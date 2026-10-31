@@ -1,33 +1,53 @@
 #!/bin/bash
 
-# Get absolute path to script directory
+# what changed: only remove gum if we installed it, and run all cleanup from an EXIT
+# trap so ctrl-c / a gum error / a failed optional step still tidies up; dropped the
+# unused aur.sh source; read selections line by line instead of clobbering $IFS.
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Source utility functions
 source "$SCRIPT_DIR/utils/display.sh"
-source "$SCRIPT_DIR/utils/aur.sh"
-
-# Source optional installers
 source "$SCRIPT_DIR/optionals/prismlauncher.sh"
 source "$SCRIPT_DIR/optionals/seanime.sh"
 
-# Exit on any error
 set -e
 
+gum_installed_by_us=0
+
+cleanup() {
+    cd "$SCRIPT_DIR" 2>/dev/null || true
+
+    if [ "$gum_installed_by_us" -eq 1 ] && command -v paru &>/dev/null; then
+        paru -Rs --noconfirm gum 2>/dev/null || true
+    fi
+
+    if [ -d "$SCRIPT_DIR/temp" ]; then
+        if find "$SCRIPT_DIR/temp" -user root -print -quit 2>/dev/null | grep -q .; then
+            sudo rm -rf "$SCRIPT_DIR/temp"
+        else
+            rm -rf "$SCRIPT_DIR/temp"
+        fi
+    fi
+}
+trap cleanup EXIT
+
 main() {
-    # Check if paru is installed
     if ! command -v paru &>/dev/null; then
-        print_error "paru is not installed. Run setup.sh first!"
+        print_error "paru isn't installed — run setup.sh first"
         exit 1
     fi
 
-    paru -S --noconfirm gum
+    if ! command -v gum &>/dev/null; then
+        if ! paru -S --noconfirm gum; then
+            print_error "couldn't install gum, which is needed for the menu"
+            exit 1
+        fi
+        gum_installed_by_us=1
+    fi
 
-    # Clear screen
     clear
 
-    # Selection GUI
-    local selections
+    local selections=""
     selections=$(gum choose \
         --no-limit \
         --cursor="→ " \
@@ -39,45 +59,23 @@ main() {
         --header="Select actions to run:" \
         --height=10 \
         "PrismLauncher Setup" \
-        "Seanime Setup")
+        "Seanime Setup" 2>/dev/null) || true
 
-    # Check if user made selections
-    if [[ -z "$selections" ]]; then
-        paru -Rs --noconfirm gum
-        clear
-        print_error "No selections made."
-        exit 0
+    if [ -z "$selections" ]; then
+        print_error "nothing selected"
+        return 0
     fi
 
-    # Process each selection
     local item
-    IFS=$'\n'
-    for item in $selections; do
+    while IFS= read -r item; do
         case "$item" in
-        "PrismLauncher Setup")
-            install_prismlauncher
-            ;;
-        "Seanime Setup")
-            install_seanime
-            ;;
+            "PrismLauncher Setup") install_prismlauncher ;;
+            "Seanime Setup")       install_seanime ;;
         esac
-        echo "" # Empty line between actions
-    done
-    unset IFS
+        echo
+    done <<< "$selections"
 
-    # ── Safe temp cleanup — only touch our own directory ─────────────
-    if [ -d "$SCRIPT_DIR/temp" ]; then
-        # sudo only if root-owned files exist inside
-        if find "$SCRIPT_DIR/temp" -user root -print -quit 2>/dev/null | grep -q .; then
-            sudo rm -rf "$SCRIPT_DIR/temp"
-        else
-            rm -rf "$SCRIPT_DIR/temp"
-        fi
-    fi
-
-    paru -Rs --noconfirm gum
-
-    print_success "All selected actions completed!"
+    print_success "all selected actions finished"
 }
 
 main "$@"
