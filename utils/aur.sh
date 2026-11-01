@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# what changed: back up /etc/pacman.conf before editing it; only remove reflector if
-# we were the one who installed it (it used to rip out a user's own install); use
-# grep in `if` form rather than `cmd && return`, which trips set -e on no match.
-
 source "$SCRIPT_DIR/utils/display.sh"
 
 enable_ilovecandy() {
@@ -44,15 +40,21 @@ setup_aur_helper() {
         return 0
     fi
 
-    print_info "building paru from the AUR (this takes a minute)"
+    print_info "building paru from the AUR"
 
     if ! sudo pacman -S --needed --noconfirm git base-devel; then
         print_error "couldn't install git/base-devel, needed to build paru"
         return 1
     fi
 
-    mkdir -p "$temp_dir" || { print_error "couldn't create $temp_dir"; return 1; }
-    cd "$temp_dir" || { print_error "couldn't enter $temp_dir"; return 1; }
+    mkdir -p "$temp_dir" || {
+        print_error "couldn't create $temp_dir"
+        return 1
+    }
+    cd "$temp_dir" || {
+        print_error "couldn't enter $temp_dir"
+        return 1
+    }
 
     rm -rf paru
     if ! git clone --depth 1 https://aur.archlinux.org/paru.git; then
@@ -61,7 +63,11 @@ setup_aur_helper() {
         return 1
     fi
 
-    cd paru || { print_error "paru clone has no paru/ directory"; cd "$SCRIPT_DIR" || true; return 1; }
+    cd paru || {
+        print_error "paru clone has no paru/ directory"
+        cd "$SCRIPT_DIR" || true
+        return 1
+    }
 
     if ! makepkg -si --noconfirm; then
         print_error "makepkg failed building paru"
@@ -106,7 +112,6 @@ setup_chaotic_aur() {
 
     printf '\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist\n' | sudo tee -a /etc/pacman.conf >/dev/null
 
-    # -Sy, not -Syu: setup.sh already did a full upgrade and this is just a sync
     if ! sudo pacman -Sy --noconfirm; then
         print_error "pacman -Sy failed after adding chaotic-aur"
         return 1
@@ -116,7 +121,7 @@ setup_chaotic_aur() {
 }
 
 setup_mirror_list() {
-    print_info "refreshing mirrors with reflector (best effort)"
+    print_info "refreshing mirrors with reflector"
 
     local we_installed_reflector=0
     if ! command -v reflector &>/dev/null; then

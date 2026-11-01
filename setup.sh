@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# what changed: refuse to run as root, warm up sudo once so it doesn't prompt in the
-# middle of the paru build, coax temp cleanup via an EXIT trap, and don't move an
-# already-stowed ~/.config out from under a re-run.
-
-# absolute path to this script's directory
+# Get absolute path of the script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 source "$SCRIPT_DIR/utils/display.sh"
@@ -23,7 +19,7 @@ source "$SCRIPT_DIR/themes/zsh.sh"
 
 set -e
 
-# clears scratch space; runs on any exit so an aborted run doesn't leave junk
+# Temp cleanup safety net
 cleanup() {
     cd "$SCRIPT_DIR" 2>/dev/null || true
     if [ -n "$SCRIPT_DIR" ] && [ -d "$SCRIPT_DIR/temp" ]; then
@@ -38,8 +34,7 @@ backup_config() {
         return 0
     fi
 
-    # if the symlinks point back at ~/dotfiles, this is our own stow output —
-    # moving it would break the install, so leave it be
+    # Check if there are already symlinks
     if find "$HOME/.config" -maxdepth 3 -type l -lname "$HOME/dotfiles/*" -print -quit 2>/dev/null | grep -q .; then
         print_info "~/.config looks stow-managed already — skipping backup"
         return 0
@@ -56,7 +51,7 @@ backup_config() {
 
 main() {
     if [ "$(id -u)" -eq 0 ]; then
-        print_error "don't run this as root — it installs into \$HOME and calls sudo on its own"
+        print_error "don't run this as root"
         exit 1
     fi
 
@@ -69,7 +64,7 @@ main() {
     fi
     source "$SCRIPT_DIR/packages.conf"
 
-    # one prompt up front beats getting asked midway through the paru build
+    # check if we have sudo privileges
     if ! sudo -v; then
         print_error "sudo isn't cooperating — can't continue"
         exit 1
