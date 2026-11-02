@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# what changed: check "already installed" before creating directories, and keep the
-# font swap guarded since upstream keeps dropping the Ubuntu Nerd Font line.
-
 source "$SCRIPT_DIR/utils/display.sh"
 
 install_swaync_theme() {
@@ -17,8 +14,14 @@ install_swaync_theme() {
 
     print_info "installing the swaync theme"
 
-    mkdir -p "$theme_dir" "$temp_dir" || { print_error "couldn't create the swaync dirs"; return 1; }
-    cd "$temp_dir" || { print_error "couldn't enter $temp_dir"; return 1; }
+    mkdir -p "$theme_dir" "$temp_dir" || {
+        print_error "couldn't create the swaync dirs"
+        return 1
+    }
+    cd "$temp_dir" || {
+        print_error "couldn't enter $temp_dir"
+        return 1
+    }
 
     rm -f "$theme_name.css"
 

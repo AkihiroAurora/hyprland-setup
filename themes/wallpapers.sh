@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# what changed: copy the wallpapers instead of moving them out of the repo. the old
-# mv gutted the source, so a second run (and the dotfiles step) found nothing there.
-
 source "$SCRIPT_DIR/utils/display.sh"
 
 install_wallpapers() {
@@ -24,11 +21,14 @@ install_wallpapers() {
         return 0
     fi
 
-    print_info "copying wallpapers to $dest"
+    print_info "moving wallpapers to $dest"
 
-    mkdir -p "$dest" || { print_error "couldn't create $dest"; return 1; }
-    if ! cp -r "$src/." "$dest/"; then
-        print_error "couldn't copy the wallpapers"
+    mkdir -p "$dest" || {
+        print_error "couldn't create $dest"
+        return 1
+    }
+    if ! mv "$src/." "$dest/"; then
+        print_error "couldn't move the wallpapers"
         return 1
     fi
 

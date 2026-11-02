@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# what changed: small tidy — same checks, but the parity check after install is the
-# only source of truth for "it worked".
-
 source "$SCRIPT_DIR/utils/display.sh"
 
 install_seanime() {

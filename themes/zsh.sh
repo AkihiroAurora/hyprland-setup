@@ -1,14 +1,13 @@
 #!/bin/bash
 
-# what changed: use `command -v` instead of `which` (not guaranteed on a bare Arch),
-# match the shell path literally with grep -xF, and fall back to id -un when $USER
-# isn't set.
-
 source "$SCRIPT_DIR/utils/display.sh"
 
 setup_zsh_shell() {
     local zsh_path
-    zsh_path=$(command -v zsh) || { print_error "zsh isn't installed"; return 1; }
+    zsh_path=$(command -v zsh) || {
+        print_error "zsh isn't installed"
+        return 1
+    }
 
     local login_shell
     login_shell=$(basename "${SHELL:-/bin/bash}")
@@ -28,9 +27,9 @@ setup_zsh_shell() {
 
     local user_name="${USER:-$(id -un)}"
     if ! sudo chsh -s "$zsh_path" "$user_name"; then
-        print_error "couldn't set zsh as the login shell for $user_name"
+        print_error "couldn't set zsh as the default shell for $user_name"
         return 1
     fi
 
-    print_success "zsh is now the login shell — log out to pick it up"
+    print_success "zsh is now the default shell"
 }

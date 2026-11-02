@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# what changed: don't create dirs before the already-installed check; otherwise same
-# shallow clone + copy, just with tighter checks.
-
 source "$SCRIPT_DIR/utils/display.sh"
 
 install_yazi_theme() {
@@ -17,8 +14,14 @@ install_yazi_theme() {
 
     print_info "installing the catppuccin yazi theme"
 
-    mkdir -p "$theme_dir" "$temp_dir" || { print_error "couldn't create the yazi dirs"; return 1; }
-    cd "$temp_dir" || { print_error "couldn't enter $temp_dir"; return 1; }
+    mkdir -p "$theme_dir" "$temp_dir" || {
+        print_error "couldn't create the yazi dirs"
+        return 1
+    }
+    cd "$temp_dir" || {
+        print_error "couldn't enter $temp_dir"
+        return 1
+    }
 
     rm -rf yazi
     if ! git clone --depth 1 https://github.com/catppuccin/yazi.git; then

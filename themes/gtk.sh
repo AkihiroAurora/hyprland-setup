@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# what changed: clear stale gtk-4.0 symlinks before relinking — the old ln -sf would
-# nest a link inside an existing directory on a re-run. rest is the same config,
-# just tidied.
-
 source "$SCRIPT_DIR/utils/display.sh"
 
 setup_gtk_theme() {
@@ -30,7 +26,10 @@ setup_gtk_theme() {
         gsettings set org.gnome.desktop.interface icon-theme 'Dracula' || true
     fi
 
-    mkdir -p "$gtk3" "$gtk4" || { print_error "couldn't create the gtk config dirs"; return 1; }
+    mkdir -p "$gtk3" "$gtk4" || {
+        print_error "couldn't create the gtk config dirs"
+        return 1
+    }
 
     cat >"$gtk3/settings.ini" <<EOF
 [Settings]

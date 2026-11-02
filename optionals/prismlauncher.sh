@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# what changed: verify the download is a real, non-empty zip before unzipping, and
-# keep both "already installed" checks up top.
-
 source "$SCRIPT_DIR/utils/display.sh"
 
 install_prismlauncher() {
@@ -27,8 +24,14 @@ install_prismlauncher() {
 
     print_info "installing the prismlauncher theme"
 
-    mkdir -p "$theme_dir" "$temp_dir" || { print_error "couldn't create theme/temp dirs"; return 1; }
-    cd "$temp_dir" || { print_error "couldn't enter $temp_dir"; return 1; }
+    mkdir -p "$theme_dir" "$temp_dir" || {
+        print_error "couldn't create theme/temp dirs"
+        return 1
+    }
+    cd "$temp_dir" || {
+        print_error "couldn't enter $temp_dir"
+        return 1
+    }
 
     rm -rf themes "$zip"
 

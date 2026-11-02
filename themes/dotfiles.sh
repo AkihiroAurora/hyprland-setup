@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# what changed: cd back to $SCRIPT_DIR even when the cd into ~/dotfiles fails, fail
-# loudly if the source is incomplete, and be clearer when stow is missing.
-
 source "$SCRIPT_DIR/utils/display.sh"
 
 install_dotfiles() {

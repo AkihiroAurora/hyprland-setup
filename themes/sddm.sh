@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# what changed: back up /etc/sddm.conf first, put Current= under the [Theme] block
-# instead of blindly appending it, and treat qt5-quickcontrols2 as optional so a
-# package that got dropped from the repos doesn't abort the whole install.
-
 source "$SCRIPT_DIR/utils/display.sh"
 
 install_sddm_theme() {
@@ -18,8 +14,14 @@ install_sddm_theme() {
 
     print_info "installing the sddm theme"
 
-    mkdir -p "$temp_dir" || { print_error "couldn't create $temp_dir"; return 1; }
-    cd "$temp_dir" || { print_error "couldn't enter $temp_dir"; return 1; }
+    mkdir -p "$temp_dir" || {
+        print_error "couldn't create $temp_dir"
+        return 1
+    }
+    cd "$temp_dir" || {
+        print_error "couldn't enter $temp_dir"
+        return 1
+    }
 
     rm -rf "$theme_name" "$zip"
 
@@ -28,7 +30,7 @@ install_sddm_theme() {
         cd "$SCRIPT_DIR" || true
         return 1
     fi
-    # older sddm themes still ask for this; not a hard requirement anymore
+
     sudo pacman -S --needed --noconfirm qt5-quickcontrols2 ||
         print_warning "qt5-quickcontrols2 unavailable — a few widgets may look off"
 

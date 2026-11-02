@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# what changed: move the already-installed check ahead of the dir creation, and
-# verify the copied file has content before declaring success.
-
 source "$SCRIPT_DIR/utils/display.sh"
 
 install_btop_theme() {
@@ -17,8 +14,14 @@ install_btop_theme() {
 
     print_info "installing the catppuccin btop theme"
 
-    mkdir -p "$theme_dir" "$temp_dir" || { print_error "couldn't create the btop dirs"; return 1; }
-    cd "$temp_dir" || { print_error "couldn't enter $temp_dir"; return 1; }
+    mkdir -p "$theme_dir" "$temp_dir" || {
+        print_error "couldn't create the btop dirs"
+        return 1
+    }
+    cd "$temp_dir" || {
+        print_error "couldn't enter $temp_dir"
+        return 1
+    }
 
     rm -rf btop
     if ! git clone --depth 1 https://github.com/catppuccin/btop.git; then

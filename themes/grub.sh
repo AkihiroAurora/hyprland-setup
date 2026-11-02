@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# what changed: verify the theme source before touching system paths, create the
-# system theme dir explicitly (it isn't always there), and keep the timed backup
-# so a failed grub-mkconfig can tell the user where their old config went.
-
 source "$SCRIPT_DIR/utils/display.sh"
 
 install_grub_theme() {
@@ -28,13 +24,19 @@ install_grub_theme() {
 
     print_info "installing the catppuccin grub theme"
 
-    mkdir -p "$temp_dir" || { print_error "couldn't create $temp_dir"; return 1; }
+    mkdir -p "$temp_dir" || {
+        print_error "couldn't create $temp_dir"
+        return 1
+    }
     if ! sudo mkdir -p /usr/share/grub/themes; then
         print_error "couldn't create /usr/share/grub/themes"
         return 1
     fi
 
-    cd "$temp_dir" || { print_error "couldn't enter $temp_dir"; return 1; }
+    cd "$temp_dir" || {
+        print_error "couldn't enter $temp_dir"
+        return 1
+    }
 
     rm -rf grub
     if ! git clone --depth 1 https://github.com/catppuccin/grub.git; then

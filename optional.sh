@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# what changed: only remove gum if we installed it, and run all cleanup from an EXIT
-# trap so ctrl-c / a gum error / a failed optional step still tidies up; dropped the
-# unused aur.sh source; read selections line by line instead of clobbering $IFS.
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 source "$SCRIPT_DIR/utils/display.sh"
@@ -47,6 +43,7 @@ main() {
 
     clear
 
+    # Create the selection menu
     local selections=""
     selections=$(gum choose \
         --no-limit \
@@ -59,21 +56,22 @@ main() {
         --header="Select actions to run:" \
         --height=10 \
         "PrismLauncher Setup" \
-        "Seanime Setup" 2>/dev/null) || true
+        "Seanime Setup") || true
 
     if [ -z "$selections" ]; then
         print_error "nothing selected"
         return 0
     fi
 
+    # Runs the selected actions
     local item
     while IFS= read -r item; do
         case "$item" in
-            "PrismLauncher Setup") install_prismlauncher ;;
-            "Seanime Setup")       install_seanime ;;
+        "PrismLauncher Setup") install_prismlauncher ;;
+        "Seanime Setup") install_seanime ;;
         esac
         echo
-    done <<< "$selections"
+    done <<<"$selections"
 
     print_success "all selected actions finished"
 }

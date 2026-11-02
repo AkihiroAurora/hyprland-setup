@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# what changed: declare the loop vars, and download the oh-my-posh installer to a
-# file first — the old `curl | sudo bash` literally always "succeeded", even when
-# the download 404'd, because the exit status came from bash reading empty stdin.
-
 source "$SCRIPT_DIR/utils/display.sh"
 
 is_installed() {
@@ -22,7 +18,10 @@ setup_oh_my_posh() {
     fi
 
     local tmp
-    tmp=$(mktemp) || { print_error "mktemp failed"; return 1; }
+    tmp=$(mktemp) || {
+        print_error "mktemp failed"
+        return 1
+    }
 
     if ! curl -fsSL https://ohmyposh.dev/install.sh -o "$tmp"; then
         print_error "couldn't download the oh-my-posh installer from ohmyposh.dev"
